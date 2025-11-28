@@ -32,7 +32,7 @@ import { z } from "zod";
 
 import { logout } from "../store/authSlice";
 import type { Persona } from "../types/index";
-import { getPeople } from "../services/people";
+import { getPeople, postPeople } from "../services/people";
 
 const personaSchema = z.object({
   tipo_documento: z.string().min(1, "Seleccione un tipo de documento"),
@@ -85,7 +85,7 @@ const Dashboard = () => {
     },
   });
 
-  const onSubmit: SubmitHandler<PersonaFormInputs> = (data) => {
+  const onSubmit: SubmitHandler<PersonaFormInputs> = async (data) => {
     if (editingId !== null) {
       setPersonas((prev) =>
         prev.map((p) => (p.id === editingId ? { ...data, id: editingId } : p))
@@ -98,6 +98,7 @@ const Dashboard = () => {
         ...data,
         id: Math.floor(Math.random() * 1000000),
       };
+      await postPeople(newPersona);
       setPersonas((prev) => [...prev, newPersona]);
       enqueueSnackbar("Persona creada correctamente", { variant: "success" });
     }
@@ -115,8 +116,6 @@ const Dashboard = () => {
     if (persona) {
       setEditingId(persona.id || null);
       reset({
-        // Asegúrate de que las llaves (izquierda) sean snake_case como en tu Schema
-        // Y los valores (derecha) vengan como llegan de la API/Tabla
         tipo_documento: persona.tipo_documento,
         documento: persona.documento,
         nombres: persona.nombres,
