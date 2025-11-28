@@ -172,7 +172,15 @@ const Dashboard = () => {
   };
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100vh", bgcolor: "#f5f7fa", overflow: "hidden" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+        bgcolor: "#f5f7fa",
+        overflow: "hidden",
+      }}
+    >
       <Box
         sx={{
           bgcolor: "white",
@@ -231,7 +239,7 @@ const Dashboard = () => {
 
       <Container maxWidth="xl" sx={{ py: 4 }}>
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Card
               elevation={0}
               sx={{
@@ -265,7 +273,7 @@ const Dashboard = () => {
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Card
               elevation={0}
               sx={{
@@ -382,7 +390,9 @@ const Dashboard = () => {
                       }}
                     >
                       <TableCell>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                        >
                           <Avatar
                             sx={{
                               bgcolor: "#1e3c72",
