@@ -11,4 +11,15 @@ const postPeople = async (payload: Persona) => {
   return data;
 };
 
-export { getPeople, postPeople };
+const patchPeople = async (payload: Persona) => {
+  console.log(payload);
+  const { data } = await axiosClient.patch(`v1/personas/${payload.id}/`, payload);
+  return data;
+};
+
+const deletePeople = async (id: number) => {
+  const { data } = await axiosClient.delete(`v1/personas/${id}/`);
+  return data;
+};
+
+export { getPeople, postPeople, patchPeople, deletePeople };

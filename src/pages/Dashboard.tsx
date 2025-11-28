@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Container,
   Typography,
@@ -32,7 +32,12 @@ import { z } from "zod";
 
 import { logout } from "../store/authSlice";
 import type { Persona } from "../types/index";
-import { getPeople, postPeople } from "../services/people";
+import {
+  getPeople,
+  postPeople,
+  patchPeople,
+  deletePeople,
+} from "../services/people";
 
 const personaSchema = z.object({
   tipo_documento: z.string().min(1, "Seleccione un tipo de documento"),
@@ -90,9 +95,14 @@ const Dashboard = () => {
       setPersonas((prev) =>
         prev.map((p) => (p.id === editingId ? { ...data, id: editingId } : p))
       );
+      const updatedPersona: Persona = {
+        ...data,
+        id: editingId,
+      };
       enqueueSnackbar("Persona actualizada correctamente", {
         variant: "success",
       });
+      await patchPeople(updatedPersona);
     } else {
       const newPersona: Persona = {
         ...data,
@@ -107,6 +117,7 @@ const Dashboard = () => {
 
   const handleDelete = (id: number) => {
     if (window.confirm("¿Estás seguro de eliminar este registro?")) {
+      deletePeople(id);
       setPersonas((prev) => prev.filter((p) => p.id !== id));
       enqueueSnackbar("Registro eliminado", { variant: "warning" });
     }
