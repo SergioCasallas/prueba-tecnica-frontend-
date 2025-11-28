@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Container,
   Typography,
@@ -20,16 +20,34 @@ import {
   AppBar,
   Toolbar,
   Box,
+  Stack,
 } from "@mui/material";
 import { Edit, Delete, Add, ExitToApp } from "@mui/icons-material";
-import type { Persona } from "../types/index";
 import { useSnackbar } from "notistack";
 import { useDispatch } from "react-redux";
-import { logout } from "../store/authSlice";
 import { useNavigate } from "react-router-dom";
-import axiosClient from '../api/axiosClient';.
+import { useForm, type SubmitHandler } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
-//Dummys
+import { logout } from "../store/authSlice";
+import type { Persona } from "../types/index";
+// import axiosClient from '../api/axiosClient';
+
+const personaSchema = z.object({
+  tipoDocumento: z.string().min(1, "Seleccione un tipo de documento"),
+  documento: z
+    .string()
+    .min(5, "El documento debe tener al menos 5 caracteres")
+    .regex(/^\d+$/, "El documento solo debe contener números"), // Ejemplo de validación extra
+  nombres: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
+  apellidos: z.string().min(3, "El apellido debe tener al menos 3 caracteres"),
+  hobbie: z.string().min(3, "El hobbie es requerido"),
+});
+
+type PersonaFormInputs = z.infer<typeof personaSchema>;
+
+// --- Datos Dummy ---
 const initialData: Persona[] = [
   {
     id: 1,
@@ -51,70 +69,85 @@ const initialData: Persona[] = [
 
 const Dashboard = () => {
   const [personas, setPersonas] = useState<Persona[]>(initialData);
+
   const [open, setOpen] = useState(false);
-  const [currentPersona, setCurrentPersona] = useState<Persona>({
-    tipoDocumento: "",
-    documento: "",
-    nombres: "",
-    apellidos: "",
-    hobbie: "",
-  });
-  const [isEdit, setIsEdit] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   fetchPersonas();
-  // }, []);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<PersonaFormInputs>({
+    resolver: zodResolver(personaSchema),
+    defaultValues: {
+      tipoDocumento: "",
+      documento: "",
+      nombres: "",
+      apellidos: "",
+      hobbie: "",
+    },
+  });
 
-  // const fetchPersonas = async () => {
-  //   try {
-  //     const res = await axiosClient.get('/personas');
-  //     setPersonas(res.data);
-  //   } catch (error) {
-  //     enqueueSnackbar('Error cargando datos', { variant: 'error' });
-  //   }
-  // };
-
-  const handleSave = () => {
-    if (isEdit) {
-      setPersonas(
-        personas.map((p) => (p.id === currentPersona.id ? currentPersona : p))
+  const onSubmit: SubmitHandler<PersonaFormInputs> = (data) => {
+    if (editingId !== null) {
+      // MODO EDICIÓN
+      setPersonas((prev) =>
+        prev.map((p) => (p.id === editingId ? { ...data, id: editingId } : p))
       );
       enqueueSnackbar("Persona actualizada correctamente", {
         variant: "success",
-      }); //
+      });
     } else {
-      setPersonas([...personas, { ...currentPersona, id: Date.now() }]);
-      enqueueSnackbar("Persona creada correctamente", { variant: "success" }); //
+      // MODO CREACIÓN
+      const newPersona: Persona = {
+        ...data,
+        id: Date.now(), // ID temporal
+      };
+      setPersonas((prev) => [...prev, newPersona]);
+      enqueueSnackbar("Persona creada correctamente", { variant: "success" });
     }
-    setOpen(false);
+    handleCloseModal();
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm("¿Estás seguro de eliminar?")) {
-      setPersonas(personas.filter((p) => p.id !== id));
-      enqueueSnackbar("Persona eliminada", { variant: "warning" });
+    if (window.confirm("¿Estás seguro de eliminar este registro?")) {
+      setPersonas((prev) => prev.filter((p) => p.id !== id));
+      enqueueSnackbar("Registro eliminado", { variant: "warning" });
     }
   };
 
-  const openModal = (persona?: Persona) => {
+  const handleOpenModal = (persona?: Persona) => {
     if (persona) {
-      setCurrentPersona(persona);
-      setIsEdit(true);
+      setEditingId(persona.id || null);
+      reset({
+        tipoDocumento: persona.tipoDocumento,
+        documento: persona.documento,
+        nombres: persona.nombres,
+        apellidos: persona.apellidos,
+        hobbie: persona.hobbie,
+      });
     } else {
-      setCurrentPersona({
+      // Limpiar formulario para crear
+      setEditingId(null);
+      reset({
         tipoDocumento: "",
         documento: "",
         nombres: "",
         apellidos: "",
         hobbie: "",
       });
-      setIsEdit(false);
     }
     setOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpen(false);
+    reset();
   };
 
   const handleLogout = () => {
@@ -126,9 +159,13 @@ const Dashboard = () => {
     <Box
       sx={{ flex: 1, bgcolor: "#f5f5f5", minHeight: "100vh", width: "100%" }}
     >
-      <AppBar position="static">
+      <AppBar position="static" elevation={0}>
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{ flexGrow: 1, fontWeight: "bold" }}
+          >
             Gestión de Personas
           </Typography>
           <Button
@@ -142,29 +179,31 @@ const Dashboard = () => {
       </AppBar>
 
       <Container maxWidth="lg" sx={{ mt: 5 }}>
-        <Paper elevation={3} sx={{ p: 3 }}>
+        <Paper elevation={2} sx={{ p: 4, borderRadius: 2 }}>
           <Box
             display="flex"
             justifyContent="space-between"
             alignItems="center"
-            mb={3}
+            mb={4}
           >
-            <Typography variant="h5" color="primary">
+            <Typography variant="h5" color="textPrimary" fontWeight="500">
               Listado de Personal
             </Typography>
             <Button
               variant="contained"
+              color="primary"
               startIcon={<Add />}
-              onClick={() => openModal()}
+              onClick={() => handleOpenModal()}
+              sx={{ borderRadius: 2, px: 3 }}
             >
               Agregar Persona
             </Button>
           </Box>
 
-          <TableContainer>
+          <TableContainer component={Paper} elevation={0} variant="outlined">
             <Table>
               <TableHead>
-                <TableRow sx={{ bgcolor: "#eeeeee" }}>
+                <TableRow sx={{ bgcolor: "#f9fafb" }}>
                   <TableCell>
                     <strong>Tipo Doc</strong>
                   </TableCell>
@@ -186,116 +225,122 @@ const Dashboard = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {personas.map((row) => (
-                  <TableRow key={row.id} hover>
-                    <TableCell>{row.tipoDocumento}</TableCell>
-                    <TableCell>{row.documento}</TableCell>
-                    <TableCell>{row.nombres}</TableCell>
-                    <TableCell>{row.apellidos}</TableCell>
-                    <TableCell>{row.hobbie}</TableCell>
-                    <TableCell align="center">
-                      <IconButton
-                        color="primary"
-                        onClick={() => openModal(row)}
-                      >
-                        <Edit />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        onClick={() => handleDelete(row.id!)}
-                      >
-                        <Delete />
-                      </IconButton>
+                {personas.length > 0 ? (
+                  personas.map((row) => (
+                    <TableRow key={row.id} hover>
+                      <TableCell>{row.tipoDocumento}</TableCell>
+                      <TableCell>{row.documento}</TableCell>
+                      <TableCell>{row.nombres}</TableCell>
+                      <TableCell>{row.apellidos}</TableCell>
+                      <TableCell>{row.hobbie}</TableCell>
+                      <TableCell align="center">
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          justifyContent="center"
+                        >
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => handleOpenModal(row)}
+                          >
+                            <Edit fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleDelete(row.id!)}
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                      <Typography variant="body2" color="textSecondary">
+                        No hay registros disponibles.
+                      </Typography>
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </TableContainer>
         </Paper>
 
-        {/* Modal de Formulario */}
-        <Dialog
-          open={open}
-          onClose={() => setOpen(false)}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>
-            {isEdit ? "Editar Persona" : "Nueva Persona"}
+        <Dialog open={open} onClose={handleCloseModal} maxWidth="sm" fullWidth>
+          <DialogTitle sx={{ fontWeight: "bold" }}>
+            {editingId ? "Editar Persona" : "Nueva Persona"}
           </DialogTitle>
-          <DialogContent dividers>
-            <TextField
-              select
-              label="Tipo Documento"
-              fullWidth
-              margin="dense"
-              value={currentPersona.tipoDocumento}
-              onChange={(e) =>
-                setCurrentPersona({
-                  ...currentPersona,
-                  tipoDocumento: e.target.value,
-                })
-              }
-            >
-              <MenuItem value="CC">Cédula de Ciudadanía</MenuItem>
-              <MenuItem value="TI">Tarjeta de Identidad</MenuItem>
-              <MenuItem value="CE">Cédula de Extranjería</MenuItem>
-            </TextField>
-            <TextField
-              label="Documento"
-              fullWidth
-              margin="dense"
-              value={currentPersona.documento}
-              onChange={(e) =>
-                setCurrentPersona({
-                  ...currentPersona,
-                  documento: e.target.value,
-                })
-              }
-            />
-            <TextField
-              label="Nombres"
-              fullWidth
-              margin="dense"
-              value={currentPersona.nombres}
-              onChange={(e) =>
-                setCurrentPersona({
-                  ...currentPersona,
-                  nombres: e.target.value,
-                })
-              }
-            />
-            <TextField
-              label="Apellidos"
-              fullWidth
-              margin="dense"
-              value={currentPersona.apellidos}
-              onChange={(e) =>
-                setCurrentPersona({
-                  ...currentPersona,
-                  apellidos: e.target.value,
-                })
-              }
-            />
-            <TextField
-              label="Hobbie"
-              fullWidth
-              margin="dense"
-              value={currentPersona.hobbie}
-              onChange={(e) =>
-                setCurrentPersona({ ...currentPersona, hobbie: e.target.value })
-              }
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpen(false)} color="inherit">
-              Cancelar
-            </Button>
-            <Button onClick={handleSave} variant="contained" color="primary">
-              Guardar
-            </Button>
-          </DialogActions>
+
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <DialogContent dividers>
+              <Stack spacing={2}>
+                <TextField
+                  select
+                  label="Tipo Documento"
+                  fullWidth
+                  {...register("tipoDocumento")}
+                  error={!!errors.tipoDocumento}
+                  helperText={errors.tipoDocumento?.message}
+                >
+                  <MenuItem value="CC">Cédula de Ciudadanía</MenuItem>
+                  <MenuItem value="TI">Tarjeta de Identidad</MenuItem>
+                  <MenuItem value="CE">Cédula de Extranjería</MenuItem>
+                </TextField>
+
+                <TextField
+                  label="Documento"
+                  fullWidth
+                  type="number" // HTML5 validation básico
+                  {...register("documento")}
+                  error={!!errors.documento}
+                  helperText={errors.documento?.message}
+                />
+
+                <TextField
+                  label="Nombres"
+                  fullWidth
+                  {...register("nombres")}
+                  error={!!errors.nombres}
+                  helperText={errors.nombres?.message}
+                />
+
+                <TextField
+                  label="Apellidos"
+                  fullWidth
+                  {...register("apellidos")}
+                  error={!!errors.apellidos}
+                  helperText={errors.apellidos?.message}
+                />
+
+                <TextField
+                  label="Hobbie"
+                  fullWidth
+                  {...register("hobbie")}
+                  error={!!errors.hobbie}
+                  helperText={errors.hobbie?.message}
+                />
+              </Stack>
+            </DialogContent>
+
+            <DialogActions sx={{ px: 3, py: 2 }}>
+              <Button onClick={handleCloseModal} color="inherit">
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                disableElevation
+              >
+                Guardar
+              </Button>
+            </DialogActions>
+          </form>
         </Dialog>
       </Container>
     </Box>
