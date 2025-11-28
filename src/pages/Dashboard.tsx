@@ -34,7 +34,6 @@ import {
   Business,
   People,
   PersonAdd,
-  FilterList,
 } from "@mui/icons-material";
 import { useSnackbar } from "notistack";
 import { useDispatch } from "react-redux";
