@@ -19,6 +19,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { login } from "../store/authSlice";
+import { useEffect } from "react";
+import apiClient from "../api/axiosClient";
 
 const loginSchema = z.object({
   username: z.string().min(1, "El usuario es requerido"),
@@ -28,6 +30,12 @@ const loginSchema = z.object({
 type LoginInputs = z.infer<typeof loginSchema>;
 
 const Login = () => {
+  useEffect(() => {
+    apiClient.get("/api/auth/login").then((res) => {
+      console.log(res);
+    });
+  }, []);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
@@ -160,11 +168,7 @@ const Login = () => {
               </Typography>
             </Alert>
 
-            <Box
-              component="form"
-              onSubmit={handleSubmit(onSubmit)}
-              noValidate
-            >
+            <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
               <Stack spacing={3}>
                 <TextField
                   fullWidth
@@ -223,11 +227,13 @@ const Login = () => {
                     fontSize: "1rem",
                     fontWeight: 600,
                     textTransform: "none",
-                    background: "linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)",
+                    background:
+                      "linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)",
                     boxShadow: "0 4px 12px rgba(30, 60, 114, 0.25)",
                     "&:hover": {
                       boxShadow: "0 6px 16px rgba(30, 60, 114, 0.35)",
-                      background: "linear-gradient(135deg, #1a3461 0%, #245087 100%)",
+                      background:
+                        "linear-gradient(135deg, #1a3461 0%, #245087 100%)",
                     },
                   }}
                 >
