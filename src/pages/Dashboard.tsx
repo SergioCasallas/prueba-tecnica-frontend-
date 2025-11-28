@@ -17,12 +17,25 @@ import {
   DialogActions,
   TextField,
   MenuItem,
-  AppBar,
-  Toolbar,
   Box,
   Stack,
+  Chip,
+  Avatar,
+  Divider,
+  Card,
+  CardContent,
+  Grid,
 } from "@mui/material";
-import { Edit, Delete, Add, ExitToApp } from "@mui/icons-material";
+import {
+  Edit,
+  Delete,
+  Add,
+  ExitToApp,
+  Business,
+  People,
+  PersonAdd,
+  FilterList,
+} from "@mui/icons-material";
 import { useSnackbar } from "notistack";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -54,7 +67,6 @@ type PersonaFormInputs = z.infer<typeof personaSchema>;
 
 const Dashboard = () => {
   const [personas, setPersonas] = useState<Persona[]>([]);
-
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
 
@@ -116,7 +128,7 @@ const Dashboard = () => {
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm("¿Estás seguro de eliminar este registro?")) {
+    if (window.confirm("¿Está seguro de eliminar este registro?")) {
       deletePeople(id);
       setPersonas((prev) => prev.filter((p) => p.id !== id));
       enqueueSnackbar("Registro eliminado", { variant: "warning" });
@@ -156,101 +168,289 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  return (
-    <Box
-      sx={{ flex: 1, bgcolor: "#f5f5f5", minHeight: "100vh", width: "100%" }}
-    >
-      <AppBar position="static" elevation={0}>
-        <Toolbar>
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{ flexGrow: 1, fontWeight: "bold" }}
-          >
-            Gestión de Personas
-          </Typography>
-          <Button
-            color="inherit"
-            onClick={handleLogout}
-            startIcon={<ExitToApp />}
-          >
-            Salir
-          </Button>
-        </Toolbar>
-      </AppBar>
+  const getInitials = (nombres: string, apellidos: string) => {
+    return `${nombres.charAt(0)}${apellidos.charAt(0)}`.toUpperCase();
+  };
 
-      <Container maxWidth="lg" sx={{ mt: 5 }}>
-        <Paper elevation={2} sx={{ p: 4, borderRadius: 2 }}>
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100vh", bgcolor: "#f5f7fa", overflow: "hidden" }}>
+      <Box
+        sx={{
+          bgcolor: "white",
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+          flexShrink: 0,
+        }}
+      >
+        <Container maxWidth="xl">
           <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={4}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              py: 2,
+            }}
           >
-            <Typography variant="h5" color="textPrimary" fontWeight="500">
-              Listado de Personal
-            </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<Add />}
-              onClick={() => handleOpenModal()}
-              sx={{ borderRadius: 2, px: 3 }}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Business sx={{ fontSize: 32, color: "#1e3c72" }} />
+              <Box>
+                <Typography
+                  variant="h6"
+                  fontWeight="700"
+                  color="text.primary"
+                  sx={{ lineHeight: 1.2 }}
+                >
+                  Enterprise Portal
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Sistema de Gestión de Personal
+                </Typography>
+              </Box>
+            </Box>
+
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Chip
+                avatar={<Avatar sx={{ bgcolor: "#1e3c72" }}>A</Avatar>}
+                label="Administrador"
+                variant="outlined"
+                sx={{ fontWeight: 500 }}
+              />
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={handleLogout}
+                startIcon={<ExitToApp />}
+                sx={{ textTransform: "none", fontWeight: 600 }}
+              >
+                Cerrar Sesión
+              </Button>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card
+              elevation={0}
+              sx={{
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: 2,
+              }}
             >
-              Agregar Persona
-            </Button>
+              <CardContent>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <Avatar
+                    sx={{
+                      bgcolor: "#e3f2fd",
+                      color: "#1976d2",
+                      width: 48,
+                      height: 48,
+                    }}
+                  >
+                    <People />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h4" fontWeight="700">
+                      {personas.length}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Personal Registrado
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Card
+              elevation={0}
+              sx={{
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: 2,
+              }}
+            >
+              <CardContent>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <Avatar
+                    sx={{
+                      bgcolor: "#f3e5f5",
+                      color: "#9c27b0",
+                      width: 48,
+                      height: 48,
+                    }}
+                  >
+                    <PersonAdd />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h4" fontWeight="700">
+                      +{personas.length > 0 ? personas.length : 0}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Total Empleados
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+        <Paper
+          elevation={0}
+          sx={{
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: 2,
+            overflow: "hidden",
+          }}
+        >
+          <Box
+            sx={{
+              p: 3,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderBottom: "1px solid",
+              borderColor: "divider",
+              bgcolor: "#fafbfc",
+            }}
+          >
+            <Box>
+              <Typography variant="h6" fontWeight="700" color="text.primary">
+                Directorio de Personal
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Gestión completa de empleados y colaboradores
+              </Typography>
+            </Box>
+
+            <Stack direction="row" spacing={2}>
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={() => handleOpenModal()}
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 600,
+                  bgcolor: "#1e3c72",
+                  "&:hover": { bgcolor: "#1a3461" },
+                }}
+              >
+                Nuevo Empleado
+              </Button>
+            </Stack>
           </Box>
 
-          <TableContainer component={Paper} elevation={0} variant="outlined">
+          <TableContainer>
             <Table>
               <TableHead>
-                <TableRow sx={{ bgcolor: "#f9fafb" }}>
-                  <TableCell>
-                    <strong>Tipo Doc</strong>
+                <TableRow sx={{ bgcolor: "#fafbfc" }}>
+                  <TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>
+                    EMPLEADO
                   </TableCell>
-                  <TableCell>
-                    <strong>Documento</strong>
+                  <TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>
+                    DOCUMENTO
                   </TableCell>
-                  <TableCell>
-                    <strong>Nombres</strong>
+                  <TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>
+                    TIPO
                   </TableCell>
-                  <TableCell>
-                    <strong>Apellidos</strong>
+                  <TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>
+                    INTERESES
                   </TableCell>
-                  <TableCell>
-                    <strong>Hobbie</strong>
-                  </TableCell>
-                  <TableCell align="center">
-                    <strong>Acciones</strong>
+                  <TableCell
+                    align="right"
+                    sx={{ fontWeight: 700, color: "text.secondary" }}
+                  >
+                    ACCIONES
                   </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {personas.length > 0 ? (
                   personas.map((row) => (
-                    <TableRow key={row.id} hover>
-                      <TableCell>{row.tipo_documento}</TableCell>
-                      <TableCell>{row.documento}</TableCell>
-                      <TableCell>{row.nombres}</TableCell>
-                      <TableCell>{row.apellidos}</TableCell>
-                      <TableCell>{row.hobbie}</TableCell>
-                      <TableCell align="center">
+                    <TableRow
+                      key={row.id}
+                      sx={{
+                        "&:hover": { bgcolor: "#f8f9fa" },
+                        borderBottom: "1px solid",
+                        borderColor: "divider",
+                      }}
+                    >
+                      <TableCell>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                          <Avatar
+                            sx={{
+                              bgcolor: "#1e3c72",
+                              width: 40,
+                              height: 40,
+                              fontWeight: 600,
+                            }}
+                          >
+                            {getInitials(row.nombres, row.apellidos)}
+                          </Avatar>
+                          <Box>
+                            <Typography variant="body2" fontWeight="600">
+                              {row.nombres} {row.apellidos}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              Empleado
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight="500">
+                          {row.documento}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={row.tipo_documento}
+                          size="small"
+                          sx={{
+                            fontWeight: 600,
+                            bgcolor: "#e3f2fd",
+                            color: "#1976d2",
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
+                          {row.hobbie}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="right">
                         <Stack
                           direction="row"
-                          spacing={1}
-                          justifyContent="center"
+                          spacing={0.5}
+                          justifyContent="flex-end"
                         >
                           <IconButton
                             size="small"
-                            color="primary"
                             onClick={() => handleOpenModal(row)}
+                            sx={{
+                              color: "#1976d2",
+                              "&:hover": { bgcolor: "#e3f2fd" },
+                            }}
                           >
                             <Edit fontSize="small" />
                           </IconButton>
                           <IconButton
                             size="small"
-                            color="error"
                             onClick={() => handleDelete(row.id!)}
+                            sx={{
+                              color: "#d32f2f",
+                              "&:hover": { bgcolor: "#ffebee" },
+                            }}
                           >
                             <Delete fontSize="small" />
                           </IconButton>
@@ -260,9 +460,19 @@ const Dashboard = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-                      <Typography variant="body2" color="textSecondary">
-                        No hay registros disponibles.
+                    <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                      <People
+                        sx={{ fontSize: 64, color: "text.disabled", mb: 2 }}
+                      />
+                      <Typography
+                        variant="h6"
+                        color="text.secondary"
+                        gutterBottom
+                      >
+                        No hay empleados registrados
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Comience agregando su primer empleado al sistema
                       </Typography>
                     </TableCell>
                   </TableRow>
@@ -271,79 +481,132 @@ const Dashboard = () => {
             </Table>
           </TableContainer>
         </Paper>
-
-        <Dialog open={open} onClose={handleCloseModal} maxWidth="sm" fullWidth>
-          <DialogTitle sx={{ fontWeight: "bold" }}>
-            {editingId ? "Editar Persona" : "Nueva Persona"}
-          </DialogTitle>
-
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <DialogContent dividers>
-              <Stack spacing={2}>
-                <TextField
-                  select
-                  label="Tipo Documento"
-                  fullWidth
-                  {...register("tipo_documento")}
-                  error={!!errors.tipo_documento}
-                  helperText={errors.tipo_documento?.message}
-                >
-                  <MenuItem value="CC">Cédula de Ciudadanía</MenuItem>
-                  <MenuItem value="TI">Tarjeta de Identidad</MenuItem>
-                  <MenuItem value="CE">Cédula de Extranjería</MenuItem>
-                </TextField>
-
-                <TextField
-                  label="Documento"
-                  fullWidth
-                  type="number"
-                  {...register("documento")}
-                  error={!!errors.documento}
-                  helperText={errors.documento?.message}
-                />
-
-                <TextField
-                  label="Nombres"
-                  fullWidth
-                  {...register("nombres")}
-                  error={!!errors.nombres}
-                  helperText={errors.nombres?.message}
-                />
-
-                <TextField
-                  label="Apellidos"
-                  fullWidth
-                  {...register("apellidos")}
-                  error={!!errors.apellidos}
-                  helperText={errors.apellidos?.message}
-                />
-
-                <TextField
-                  label="Hobbie"
-                  fullWidth
-                  {...register("hobbie")}
-                  error={!!errors.hobbie}
-                  helperText={errors.hobbie?.message}
-                />
-              </Stack>
-            </DialogContent>
-
-            <DialogActions sx={{ px: 3, py: 2 }}>
-              <Button onClick={handleCloseModal} color="inherit">
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                disableElevation
-              >
-                Guardar
-              </Button>
-            </DialogActions>
-          </form>
-        </Dialog>
       </Container>
+
+      <Dialog
+        open={open}
+        onClose={handleCloseModal}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            fontWeight: 700,
+            fontSize: "1.25rem",
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            pb: 2,
+          }}
+        >
+          {editingId ? "Editar Empleado" : "Nuevo Empleado"}
+        </DialogTitle>
+
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogContent sx={{ pt: 3 }}>
+            <Stack spacing={3}>
+              <TextField
+                select
+                label="Tipo de Documento"
+                fullWidth
+                {...register("tipo_documento")}
+                error={!!errors.tipo_documento}
+                helperText={errors.tipo_documento?.message}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    bgcolor: "#fafafa",
+                  },
+                }}
+              >
+                <MenuItem value="CC">Cédula de Ciudadanía</MenuItem>
+                <MenuItem value="TI">Tarjeta de Identidad</MenuItem>
+                <MenuItem value="CE">Cédula de Extranjería</MenuItem>
+              </TextField>
+
+              <TextField
+                label="Número de Documento"
+                fullWidth
+                type="number"
+                {...register("documento")}
+                error={!!errors.documento}
+                helperText={errors.documento?.message}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    bgcolor: "#fafafa",
+                  },
+                }}
+              />
+
+              <TextField
+                label="Nombres"
+                fullWidth
+                {...register("nombres")}
+                error={!!errors.nombres}
+                helperText={errors.nombres?.message}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    bgcolor: "#fafafa",
+                  },
+                }}
+              />
+
+              <TextField
+                label="Apellidos"
+                fullWidth
+                {...register("apellidos")}
+                error={!!errors.apellidos}
+                helperText={errors.apellidos?.message}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    bgcolor: "#fafafa",
+                  },
+                }}
+              />
+
+              <TextField
+                label="Intereses / Hobbies"
+                fullWidth
+                {...register("hobbie")}
+                error={!!errors.hobbie}
+                helperText={errors.hobbie?.message}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    bgcolor: "#fafafa",
+                  },
+                }}
+              />
+            </Stack>
+          </DialogContent>
+
+          <Divider />
+
+          <DialogActions sx={{ px: 3, py: 2.5 }}>
+            <Button
+              onClick={handleCloseModal}
+              sx={{ textTransform: "none", fontWeight: 600 }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                bgcolor: "#1e3c72",
+                "&:hover": { bgcolor: "#1a3461" },
+                px: 3,
+              }}
+            >
+              {editingId ? "Actualizar" : "Guardar"}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
     </Box>
   );
 };
