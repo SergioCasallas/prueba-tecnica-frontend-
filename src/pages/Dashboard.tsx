@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Container,
   Typography,
@@ -32,14 +32,14 @@ import { z } from "zod";
 
 import { logout } from "../store/authSlice";
 import type { Persona } from "../types/index";
-// import axiosClient from '../api/axiosClient';
+import { getPeople } from "../services/people";
 
 const personaSchema = z.object({
-  tipoDocumento: z.string().min(1, "Seleccione un tipo de documento"),
+  tipo_documento: z.string().min(1, "Seleccione un tipo de documento"),
   documento: z
     .string()
     .min(5, "El documento debe tener al menos 5 caracteres")
-    .regex(/^\d+$/, "El documento solo debe contener números"), // Ejemplo de validación extra
+    .regex(/^\d+$/, "El documento solo debe contener números"),
   nombres: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
   apellidos: z.string().min(3, "El apellido debe tener al menos 3 caracteres"),
   hobbie: z.string().min(3, "El hobbie es requerido"),
@@ -47,28 +47,8 @@ const personaSchema = z.object({
 
 type PersonaFormInputs = z.infer<typeof personaSchema>;
 
-// --- Datos Dummy ---
-const initialData: Persona[] = [
-  {
-    id: 1,
-    tipoDocumento: "CC",
-    documento: "123456789",
-    nombres: "Pepito",
-    apellidos: "Pérez",
-    hobbie: "Programar",
-  },
-  {
-    id: 2,
-    tipoDocumento: "TI",
-    documento: "987654321",
-    nombres: "Ana",
-    apellidos: "Gómez",
-    hobbie: "Leer",
-  },
-];
-
 const Dashboard = () => {
-  const [personas, setPersonas] = useState<Persona[]>(initialData);
+  const [personas, setPersonas] = useState<Persona[]>([]);
 
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -76,6 +56,18 @@ const Dashboard = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchPeople = async () => {
+      try {
+        const response = await getPeople();
+        setPersonas(response);
+      } catch (error) {
+        console.error("Error fetching people:", error);
+      }
+    };
+    fetchPeople();
+  }, []);
 
   const {
     register,
@@ -85,7 +77,7 @@ const Dashboard = () => {
   } = useForm<PersonaFormInputs>({
     resolver: zodResolver(personaSchema),
     defaultValues: {
-      tipoDocumento: "",
+      tipo_documento: "",
       documento: "",
       nombres: "",
       apellidos: "",
@@ -95,7 +87,6 @@ const Dashboard = () => {
 
   const onSubmit: SubmitHandler<PersonaFormInputs> = (data) => {
     if (editingId !== null) {
-      // MODO EDICIÓN
       setPersonas((prev) =>
         prev.map((p) => (p.id === editingId ? { ...data, id: editingId } : p))
       );
@@ -103,10 +94,9 @@ const Dashboard = () => {
         variant: "success",
       });
     } else {
-      // MODO CREACIÓN
       const newPersona: Persona = {
         ...data,
-        id: Date.now(), // ID temporal
+        id: Math.floor(Math.random() * 1000000),
       };
       setPersonas((prev) => [...prev, newPersona]);
       enqueueSnackbar("Persona creada correctamente", { variant: "success" });
@@ -125,17 +115,18 @@ const Dashboard = () => {
     if (persona) {
       setEditingId(persona.id || null);
       reset({
-        tipoDocumento: persona.tipoDocumento,
+        // Asegúrate de que las llaves (izquierda) sean snake_case como en tu Schema
+        // Y los valores (derecha) vengan como llegan de la API/Tabla
+        tipo_documento: persona.tipo_documento,
         documento: persona.documento,
         nombres: persona.nombres,
         apellidos: persona.apellidos,
         hobbie: persona.hobbie,
       });
     } else {
-      // Limpiar formulario para crear
       setEditingId(null);
       reset({
-        tipoDocumento: "",
+        tipo_documento: "",
         documento: "",
         nombres: "",
         apellidos: "",
@@ -228,7 +219,7 @@ const Dashboard = () => {
                 {personas.length > 0 ? (
                   personas.map((row) => (
                     <TableRow key={row.id} hover>
-                      <TableCell>{row.tipoDocumento}</TableCell>
+                      <TableCell>{row.tipo_documento}</TableCell>
                       <TableCell>{row.documento}</TableCell>
                       <TableCell>{row.nombres}</TableCell>
                       <TableCell>{row.apellidos}</TableCell>
@@ -283,9 +274,9 @@ const Dashboard = () => {
                   select
                   label="Tipo Documento"
                   fullWidth
-                  {...register("tipoDocumento")}
-                  error={!!errors.tipoDocumento}
-                  helperText={errors.tipoDocumento?.message}
+                  {...register("tipo_documento")}
+                  error={!!errors.tipo_documento}
+                  helperText={errors.tipo_documento?.message}
                 >
                   <MenuItem value="CC">Cédula de Ciudadanía</MenuItem>
                   <MenuItem value="TI">Tarjeta de Identidad</MenuItem>
@@ -295,7 +286,7 @@ const Dashboard = () => {
                 <TextField
                   label="Documento"
                   fullWidth
-                  type="number" // HTML5 validation básico
+                  type="number"
                   {...register("documento")}
                   error={!!errors.documento}
                   helperText={errors.documento?.message}

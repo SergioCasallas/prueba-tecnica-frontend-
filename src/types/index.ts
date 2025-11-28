@@ -1,6 +1,6 @@
 export interface Persona {
   id?: number;
-  tipoDocumento: string;
+  tipo_documento: string;
   documento: string;
   nombres: string;
   apellidos: string;
